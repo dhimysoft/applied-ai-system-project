@@ -1,175 +1,252 @@
-# 🎵 Music Recommender Simulation
+# AI Music Recommender System
 
-## Project Summary
+## Project Overview
+The AI Music Recommender System is an applied AI project built in Python that recommends songs based on a listener's mood, preferred energy level, and optional genre preference.
 
-This project builds a small music recommender that uses a content-based approach to match a user's taste profile with songs in a small catalog. Each song is represented by features such as genre, mood, energy, tempo, valence, danceability, and acousticness, and the recommender scores songs based on how closely they match the user's preferences. The final output is a ranked list of songs with short explanations for why each one was recommended.
+This system solves a practical recommendation problem: helping users quickly find songs that match their current vibe instead of random popular tracks. This matters because recommendation quality directly affects user trust, engagement, and perceived value of AI-powered products.
 
----
+Developed as an AI110 final project, this system demonstrates end-to-end applied AI engineering: user input handling, retrieval, scoring, explainability, and reliability testing.
 
-## How The System Works
+## Original Project Reference (Modules 1-3)
+This project builds on the AI110 Modules 1-3 music recommender baseline, where the original system focused on a CLI recommendation loop with dataset loading, basic preference matching, and ranked song output. The original version established the core input -> scoring -> output flow and provided a functional demonstration of rule-based recommendation behavior. This final version extends that baseline with context retrieval, confidence scoring, reliability evaluation, and stronger guardrails.
 
-Real-world platforms such as Spotify or YouTube usually combine multiple signals at scale, including user behavior, listening history, likes, skips, playlists, and content features. My version keeps the system simple by prioritizing a content-based approach, which means it recommends songs by comparing song features directly to a user's preferences instead of using data from other listeners.
+## Features
+- Interactive user preference input for mood, energy, and optional genre
+- Candidate retrieval from a song dataset
+- Preference-based scoring and ranking logic
+- Top 3 recommendation output for concise CLI experience
+- Explainable AI output with Why bullet points per recommendation
+- Built-in reliability testing with predefined test profiles
+- Match summary evaluation metric for recommendation alignment
+- Graceful handling of invalid input and empty-result paths
 
-This system uses song features and user preferences to estimate which songs are the best fit.
-
-Each `Song` stores the following information:
-
-- title and artist
-- genre
-- mood
-- energy
-- tempo in beats per minute
-- valence, which roughly reflects how positive the song feels
-- danceability
-- acousticness
-
-For a simple content-based recommender, the most useful features for defining musical vibe are genre, mood, energy, and acousticness. These features match how people often describe music in everyday language, such as upbeat, chill, intense, or soft. Tempo, valence, and danceability are also useful because they add more detail to the vibe, but they work best as supporting signals rather than the only factors.
-
-The expanded catalog now includes 18 songs with a wider range of genres and moods, including hip-hop, classical, country, electronic, R&B, metal, folk, and latin. This makes it easier to test whether the recommender can meaningfully separate very different vibes instead of only choosing between a few similar songs.
-
-The `UserProfile` stores a smaller set of listener preferences:
-
-- favorite genre
-- favorite mood
-- target energy level
-- whether the user prefers acoustic songs
-
-My example taste profile during design was:
-
-```python
-{
-   "genre": "lofi",
-   "mood": "chill",
-   "energy": 0.4,
-   "likes_acoustic": False,
-}
+## System Architecture
+```text
+User Input
+   ↓
+Preference Parser
+   ↓
+Song Retrieval
+   ↓
+Scoring Engine
+   ↓
+Ranking System
+   ↓
+Explanation Generator
+   ↓
+CLI Output
+   ↓
+Reliability Testing Module
 ```
-
-This profile is specific enough to separate chill lofi songs from intense rock or metal songs because it combines both category features and a numerical target. Genre and mood identify the style, while the energy target helps the recommender distinguish low-energy tracks from high-energy ones. For the CLI verification step, the default runnable profile is set to a pop, happy, high-energy listener so the output is easy to compare against expectations.
-
-The recommender gives every song a score. This is the scoring rule: a song earns more points when it matches the user's favorite genre and mood, has an energy level close to the user's target, and fits the user's acoustic preference. Genre is weighted a little more heavily than mood because it is usually a stronger signal of long-term taste, while mood helps refine the recommendation within that style. For numerical features such as energy, the best rule is not to reward bigger or smaller numbers by default, but to reward songs that are closer to the user's preferred value.
-
-### Algorithm Recipe
-
-- `+3.0` points for a genre match
-- `+2.5` points for a mood match
-- up to `+2.0` points for energy similarity, with more points for songs closer to the target energy
-- up to `+1.0` point based on whether the song's acousticness matches the user's acoustic preference
-
-This weighting keeps genre as the strongest signal, lets mood refine the vibe, and uses energy and acousticness to separate songs that might share a genre but feel very different.
-
-After all songs are scored, the list is sorted from highest score to lowest score, and the top `k` songs are returned as recommendations. This is the ranking rule. Both parts are necessary: the scoring rule decides how well one song matches the user, and the ranking rule decides which songs should appear first when many songs are being compared.
-
-### Data Flow
 
 ```mermaid
-flowchart LR
-   A[User Preferences] --> B[Load songs from songs.csv]
-   B --> C[Loop through each song]
-   A --> D[Compare song features to user profile]
-   C --> D
-   D --> E[Calculate score]
-   E --> F[Store song, score, explanation]
-   F --> G[Sort all songs by score]
-   G --> H[Return Top K recommendations]
+flowchart TD
+    A[User Input] --> B[Preference Parser]
+    B --> C[Song Retrieval]
+    C --> D[Scoring Engine]
+    D --> E[Ranking System]
+    E --> F[Explanation Generator]
+    F --> G[CLI Output]
+    G --> H[Reliability Testing Module]
 ```
 
-This is a simple content-based recommender because it compares the attributes of songs directly to the user's preferences. It does not use other users' listening history the way a collaborative filtering system would.
+Stage summary:
+1. User Input
+   Collect user preferences such as mood, genre, and energy.
+2. Preference Parser
+   Normalize and validate input values so they can be used consistently.
+3. Song Retrieval
+   Find candidate songs from the dataset that best match user intent.
+4. Scoring Engine
+   Assign compatibility scores based on preference alignment.
+5. Ranking System
+   Sort by score and select the top recommendations.
+6. Explanation Generator
+   Produce concise Why explanations for each recommendation.
+7. CLI Output
+   Display recommendations in a clean command-line format.
+8. Reliability Testing Module
+   Run predefined profiles and report match summary performance.
 
-One expected bias in this design is that it may over-prioritize genre and miss songs that match the user's mood and energy but come from a different style. It can also under-recommend acoustic tracks for users whose profile is built around genre and mood first, because the system only uses a few weighted features.
+## Sample Interactions
+### Interaction 1: Happy + Pop + High Energy
+Input:
+- mood: happy
+- genre: pop
+- energy: 0.85
+- likes_acoustic: n
 
-### CLI Verification Output
+Output (top pick):
+- Sunrise City - Neon Echo
+- Score: 9.96 | Confidence: 0.75
+- Why includes mood/genre/energy alignment and retrieved note support.
 
-The CLI-first simulation loads the CSV catalog, scores every song, sorts the full list, and prints the top recommendations with the exact reasons used in scoring.
+### Interaction 2: Chill + Lofi + Acoustic
+Input:
+- mood: chill
+- genre: lofi
+- energy: 0.40
+- likes_acoustic: y
 
-```text
-Loaded songs: 18
+Output (top pick):
+- Midnight Coding
+- Score: 9.88 | Confidence: 0.74
+- Why highlights chill mood fit, acoustic preference alignment, and contextual evidence.
 
-Top recommendations:
+### Interaction 3: Rare Genre Request with Fallback Safety
+Input:
+- mood: happy
+- genre: soca
+- energy: 1.00
+- likes_acoustic: n
 
-Sunrise City by Neon Echo
-   Score: 8.24
-   Recommended because genre match (+3.0): pop; mood match (+2.5): happy; energy similarity (+1.92): target 0.80, song 0.82; less-acoustic preference (+0.82): acousticness 0.18.
+Output behavior:
+- System still returns top recommendations instead of failing.
+- Confidence is shown for each recommendation.
+- If overall confidence is low, baseline ranking fallback is triggered automatically.
 
-Gym Hero by Max Pulse
-   Score: 5.43
-   Recommended because genre match (+3.0): pop; energy similarity (+1.48): target 0.80, song 0.93; less-acoustic preference (+0.95): acousticness 0.05.
+## Reliability Testing
+The project includes a run_tests() routine to validate recommendation behavior across predefined user profiles.
 
-Rooftop Lights by Indigo Parade
-   Score: 4.99
-   Recommended because mood match (+2.5): happy; energy similarity (+1.84): target 0.80, song 0.76; less-acoustic preference (+0.65): acousticness 0.35.
-```
+Test process:
+- Run at least 3 predefined test cases (for example: happy, chill, intense)
+- Generate top recommendations for each case
+- Validate output structure consistency
+- Ensure system does not crash
+- Compute a simple match summary metric
 
-I could not generate or embed an actual terminal screenshot from this environment, so I included the verified output as a text block instead.
+Match summary metric:
+- Reports how many top recommendations match user mood or genre
+- Example: 2/3 recommendations matched mood or genre
 
----
+## Testing Summary (Measured Results)
+Automated tests:
+- Command: python -m pytest -q
+- Result: 4/4 passed
+- Coverage highlights: score ordering, explanation output, invalid profile rejection, confidence plus retrieved evidence fields.
 
-## Getting Started
+Reliability evaluation harness:
+- Command: python -m src.evaluate
+- Result: 4/4 profile checks passed
+- Average confidence: 0.599
 
-### Setup
+What worked:
+- Top recommendation matched expected genre families for pop, lofi, and rock-intense profiles.
+- System remained stable under adversarial/conflicting preferences and still returned top-5 results.
 
-1. Create a virtual environment (optional but recommended):
+Surprising or unexpected behavior:
+- In the adversarial conflict profile (lofi + intense + very high energy), the system still produced coherent recommendations with non-zero confidence instead of collapsing to empty or random output.
+- This highlighted that weighted scoring plus retrieval evidence can stay robust even when user preferences are partially contradictory.
 
-   ```bash
+What failed or was weak:
+- No hard test failures in the latest run.
+- Rare/underspecified input cases can produce lower confidence recommendations.
+
+Improvements made:
+- Added low-confidence fallback to baseline ranking.
+- Added explicit stage logs: [INPUT], [RETRIEVAL], [SCORING], [OUTPUT].
+- Integrated context retrieval into the main user flow.
+
+## Misuse Risks and Prevention
+Potential misuse scenarios:
+- Over-trusting suggestions as objective truth instead of subjective recommendations.
+- Using the recommender as a proxy for mental-health or emotional diagnosis based on mood input.
+- Attempting to profile users over time using repeated preference entries.
+
+Concrete prevention and guardrails:
+- Scope constraints: the project is explicitly limited to music recommendation and marked as not for high-stakes decisions.
+- Input guardrails: invalid profile values are rejected or normalized (for example, energy range checks and profile validation).
+- Reliability guardrails: low-confidence outputs trigger fallback behavior to reduce unstable recommendations.
+- Transparency guardrails: every recommendation includes Why reasoning and confidence to reduce black-box overtrust.
+- Privacy-by-design in current implementation: no user identity fields are required for recommendations.
+
+## Setup Instructions
+1. Clone the repository and enter the project folder.
+2. Create and activate a virtual environment:
    python -m venv .venv
-   source .venv/bin/activate      # Mac or Linux
-   .venv\Scripts\activate         # Windows
+   source .venv/bin/activate
+3. Install dependencies:
+   pip install -r requirements.txt
+4. Run the application:
+   python src/main.py
+5. Optional validation commands:
+   python -m pytest -q
+   python -m src.evaluate
 
-2. Install dependencies
+Quick run reference:
+- source .venv/bin/activate
+- python src/main.py
+- python -m pytest -q
 
-```bash
-pip install -r requirements.txt
-```
+## Technologies Used
+- Python 3
+- Command-Line Interface (CLI)
+- CSV-based data pipeline
+- Rule-based retrieval and scoring logic
+- Explainable recommendation generation
+- Pytest for reliability checks
 
-3. Run the app:
+## Design Decisions and Trade-Offs
+1. Rule-based scoring over trained ML
+- Why: transparent behavior, easier debugging, and predictable outputs for coursework scope.
+- Trade-off: less personalization depth than collaborative or embedding-driven models.
 
-```bash
-python -m src.main
-```
+2. Retrieval-enhanced context over static explanations
+- Why: attach supporting notes so recommendations are evidence-aware.
+- Trade-off: retrieval quality depends on note tagging coverage.
 
-### Running Tests
+3. Confidence scoring with fallback behavior
+- Why: expose recommendation certainty and protect user experience on low-confidence outputs.
+- Trade-off: fallback may reduce novelty because it reverts to stronger baseline alignment.
 
-Run the starter tests with:
+4. CLI-first architecture
+- Why: minimizes setup complexity and keeps focus on algorithmic quality.
+- Trade-off: less approachable UX than a web interface.
 
-```bash
-pytest
-```
+## Human Evaluation
+Manual walkthroughs were performed using happy/pop, chill/lofi, intense/rock, and conflicting-profile scenarios.
 
-You can add more tests in `tests/test_recommender.py`.
+Reviewer observations:
+- Explanations are readable and usually aligned with score drivers.
+- Confidence values help distinguish strong versus weaker matches.
+- Guardrails (input validation and fallback behavior) prevent broken user sessions.
 
----
+## AI Collaboration Reflection
+How AI tools were used:
+- Copilot/LLM assistance was used to speed up refactoring, documentation drafting, and edge-case review.
 
-## Experiments You Tried
+Helpful AI contribution:
+- AI suggested integrating context-aware recommendations directly into the main flow and adding stage logs ([INPUT], [RETRIEVAL], [SCORING], [OUTPUT]), which improved traceability and made evaluation output easier to interpret.
 
-I tried the recommender with different user profiles to see how the rankings changed. For a user who likes pop, happy songs, and higher energy music, songs such as "Sunrise City" and "Rooftop Lights" ranked near the top because they matched the target genre, mood, and energy level well.
+Incorrect or misleading AI output:
+- An early AI-generated suggestion referenced evaluation profiles before they were defined, which caused a broken import path in evaluation.
+- The fix was to define a shared EVALUATION_PROFILES constant in the main module and re-run tests/evaluation to confirm correctness.
 
-I also considered how the output would change if the scoring weights were adjusted. Lowering the genre weight would make mood and energy matter more, which could allow songs from different genres to rank higher if they still matched the overall vibe. Adding more weight to acousticness would likely help chill and lofi songs rise for users who prefer softer, more acoustic tracks.
-
----
-
-## Limitations and Risks
-
-This recommender has several clear limitations. It only works on a tiny catalog of songs, so the recommendations are limited by what is available in the dataset. It also does not understand lyrics, language, artist popularity, or listening context, so it cannot capture many of the reasons real people enjoy music.
-
-The scoring logic is also very simple and may over-favor songs that match one or two strong preferences, especially genre and mood. That can reduce diversity and make the recommendations feel repetitive. In a real system, this kind of design could create bias by repeatedly pushing users toward a narrow slice of the catalog.
-
----
+## Future Improvements
+- Expand dataset size and genre/mood diversity
+- Add hybrid recommendation methods (content + collaborative filtering)
+- Add embedding-based retrieval for richer semantic matching
+- Improve confidence calibration with user feedback
+- Add a lightweight web UI (for example, Streamlit)
+- Track additional evaluation metrics such as diversity and novelty
 
 ## Reflection
+Building this project reinforced that practical AI quality comes from system design, not only model complexity. Adding retrieval, confidence scoring, and reliability checks improved trust more than simply adding new features. The main engineering lesson was balancing explainability and robustness: users need both understandable reasons and safe behavior when confidence is low.
 
-Read and complete `model_card.md`:
+## Project Notes
+- Architecture diagram source: assets/system_architecture.mmd
+- Reflection and ethics documentation: model_card.md
+- Add your demo walkthrough link before final submission
 
-[**Model Card**](model_card.md)
+## Demo Walkthrough
+- Loom or demo URL: add your final Loom share URL here
 
-Building this project showed me that recommendation systems turn user preferences and item features into a score, then use that score to rank results. Even a simple model can produce useful recommendations if the features line up well with what the user wants. At the same time, the quality of the recommendations depends heavily on which features are included and how much weight each feature receives.
+If video is unavailable, add screenshots or a short GIF to assets and link them here.
 
-This project also made it clear that bias and unfairness can appear very easily. If a dataset is small or missing certain genres, moods, or artist styles, the recommender will naturally favor what is already represented. A system like this might also keep recommending the same type of music over and over, which can limit discovery and make the experience less fair for users with more varied tastes.
-
-
----
-
-## Model Card
-
-Complete the separate [model_card.md](model_card.md) file to document the intended use, strengths, limitations, and reflection for this recommender in more detail.
----
-
+## Submission Checklist
+- [x] Functional recommender system
+- [x] Explainable recommendation output
+- [x] Reliability testing with match summary
+- [x] Professional README and model card
+- [ ] Demo link added
+- [x] Commit and push to GitHub

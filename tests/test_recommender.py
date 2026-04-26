@@ -1,4 +1,11 @@
-from src.recommender import Song, UserProfile, Recommender
+from src.recommender import (
+    Song,
+    UserProfile,
+    Recommender,
+    validate_user_profile,
+    recommend_songs_with_context,
+)
+
 
 def make_small_recommender() -> Recommender:
     songs = [
@@ -59,3 +66,59 @@ def test_explain_recommendation_returns_non_empty_string():
     explanation = rec.explain_recommendation(user, song)
     assert isinstance(explanation, str)
     assert explanation.strip() != ""
+
+
+def test_validate_user_profile_rejects_invalid_energy():
+    is_valid, issues = validate_user_profile(
+        {
+            "genre": "pop",
+            "mood": "happy",
+            "energy": 1.5,
+            "likes_acoustic": False,
+            "mode": "genre-first",
+        }
+    )
+    assert is_valid is False
+    assert any("energy" in issue for issue in issues)
+
+
+def test_recommend_songs_with_context_returns_confidence_and_evidence():
+    songs = [
+        {
+            "id": 1,
+            "title": "Test Pop Track",
+            "artist": "Test Artist",
+            "genre": "pop",
+            "mood": "happy",
+            "energy": 0.8,
+            "tempo_bpm": 120,
+            "valence": 0.9,
+            "danceability": 0.8,
+            "acousticness": 0.2,
+            "popularity": 85,
+            "release_decade": 2010,
+            "mood_tag": "uplifting",
+            "instrumentalness": 0.1,
+            "liveness": 0.3,
+            "speechiness": 0.12,
+        }
+    ]
+    user_prefs = {
+        "genre": "pop",
+        "mood": "happy",
+        "energy": 0.8,
+        "likes_acoustic": False,
+        "mode": "genre-first",
+    }
+
+    recommendations = recommend_songs_with_context(
+        user_prefs=user_prefs,
+        songs=songs,
+        k=1,
+        notes_path="data/knowledge_notes.csv",
+        log_path="logs/test_recommendation_events.jsonl",
+    )
+
+    assert len(recommendations) == 1
+    assert 0.0 <= recommendations[0]["confidence"] <= 1.0
+    assert "retrieved_notes" in recommendations[0]

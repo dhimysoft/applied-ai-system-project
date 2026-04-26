@@ -1,0 +1,9 @@
+flowchart TD
+    A[User Profile Input] --> B[Guardrails: validate_user_profile]
+    B --> C[Base Recommender: score_song + diversity ranking]
+    C --> D[Retriever: knowledge_notes.csv overlap search]
+    D --> E[Confidence Estimator]
+    E --> F[Top-K Recommendations with Explanations + Evidence IDs]
+    F --> G[Structured Logger: logs/recommendation_events.jsonl]
+    G --> H[Evaluation Harness: src/evaluate.py]
+    H --> I[Human Review in README examples]

@@ -1,0 +1,7 @@
+note_id,topic,tags,content
+KB1,Genre familiarity,pop|indie pop|uplifting|happy,Pop and indie-pop songs usually perform well for users who ask for upbeat and high-valence tracks.
+KB2,Focus listening,lofi|chill|focused|reflective,Lofi tracks with moderate energy and higher acousticness are often preferred for focus and study contexts.
+KB3,High intensity,rock|metal|intense|aggressive,High-energy rock and metal songs are reliable matches when users request intense listening sessions.
+KB4,Acoustic preference,acoustic|gentle|folk|calm,Users who explicitly prefer acoustic sounds usually respond better to songs with high acousticness and softer mood tags.
+KB5,Dance/party profile,party|euphoric|electronic|latin,Party-oriented profiles correlate with high danceability and euphoric mood tags.
+KB6,Diversity reminder,diversity|genre|artist,Recommendation quality improves when repeated artists and genres are penalized to avoid narrow result sets.
