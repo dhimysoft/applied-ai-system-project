@@ -255,7 +255,7 @@ This project demonstrates my ability to design reliable, explainable, and produc
 - Add your demo walkthrough link before final submission
 
 ## Demo Walkthrough
-- Loom Demo: <PASTE_YOUR_LOOM_LINK_HERE>
+- Loom Demo: [Watch the Demo](https://www.loom.com/share/3d37d551f9ca4213802e9d1a1aa73988)
 
 Replace the placeholder above with the final Loom walkthrough link before submission.
 
@@ -266,5 +266,5 @@ If video is unavailable, add screenshots or a short GIF to assets and link them 
 - [x] Explainable recommendation output
 - [x] Reliability testing with match summary
 - [x] Professional README and model card
-- [ ] Demo link added
+- [x] Demo link added
 - [x] Commit and push to GitHub
